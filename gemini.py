@@ -3,15 +3,14 @@ import asyncio
 from google import genai
 from dotenv import load_dotenv
 import pandas as pd
-
-load_dotenv()
-
-client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
-
-df = pd.read_csv("ads.csv")
-df["ai_comment"] = None
-
 def getData():
+    load_dotenv()
+
+    client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+
+    df = pd.read_csv("ads.csv")
+    df["ai_comment"] = None
+
     for index, row in df.iterrows():
         result = client.models.generate_content(
             model="gemini-2.0-flash",
@@ -23,6 +22,6 @@ def getData():
         print(result.text)
         df.loc[index, "ai_comment"] = result.text
 
-getData()
+    df.to_csv("output.csv", index=False)
 
-df.to_csv("output.csv", index=False)
+getData()
