@@ -3,6 +3,7 @@ import asyncio
 from google import genai
 from dotenv import load_dotenv
 import pandas as pd
+
 def getData():
     load_dotenv()
 
