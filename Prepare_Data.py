@@ -122,7 +122,7 @@ race_laps_df.loc[mask, 'lap_end_time'] = (
     pd.to_timedelta(race_laps_df.loc[mask, 'duration_sector_2'], unit='s') +
     pd.to_timedelta(race_laps_df.loc[mask, 'duration_sector_3'], unit='s')
 )
-
+race_laps_df.loc[race_laps_df['lap_number'] == 1, 'DNF_Flag'] = 0
 pit_df = pit_df[((pit_df['meeting_key']==1219)&(pit_df['session_key']==9165))]
 pit_df = pit_df.rename(columns={'date':'pit_date'})
 # pit_df
