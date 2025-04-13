@@ -75,7 +75,7 @@ pit_df = combined_by_type.get('pit', pd.DataFrame())
 position_df = combined_by_type.get('position', pd.DataFrame())
 race_control_df = combined_by_type.get('race_control', pd.DataFrame())
 laps_df = combined_by_type.get('laps', pd.DataFrame())
-
+stints_df = combined_by_type.get('stints', pd.DataFrame())
 
 race_df = meetings_df.merge(session_df, how='inner', on =['meeting_key'])
 race_df = race_df[['meeting_key','session_key', 'meeting_official_name', 'location_x', 'country_name_x','circuit_short_name_x', 'session_name','date_start_x', 'date_end', 'year_x']]
