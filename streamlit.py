@@ -4,6 +4,9 @@ import pyttsx3
 from gtts import gTTS
 import tempfile
 import streamlit as st
+import edge_tts
+import asyncio
+import tempfile
 
 # Initialize TTS engine
 engine = pyttsx3.init()
@@ -19,12 +22,34 @@ engine.setProperty('voice', engine.getProperty('voices')[82].id)
 
 
 
-def speak_text(text):
-    tts = gTTS(text)
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp:
-        tts.save(tmp.name)
-        st.audio(tmp.name, format="audio/mp3")  # Streamlit audio widget
+# def speak_text(text):
+#     tts = gTTS(text)
+#     with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp:
+#         tts.save(tmp.name)
+#         st.audio(tmp.name, format="audio/mp3")  # Streamlit audio widget
 
+async def speak_text_edge_tts(text):
+    # Use a temporary file to store audio
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp:
+        output_path = tmp.name
+
+    # Create a communicator with desired voice
+    communicate = edge_tts.Communicate(
+        text=text,
+        voice="en-US-GuyNeural",   # Try "en-US-JennyNeural" or others
+        rate="+0%",                # You can try "+10%", "-10%" etc.
+        volume="+0%"               # You can try "+20%", etc.
+    )
+
+    # Save audio
+    await communicate.save(output_path)
+
+    # Streamlit audio playback
+    st.audio(output_path, format="audio/mp3")
+
+# Wrapper to call from Streamlit
+def speak_text(text):
+    asyncio.run(speak_text_edge_tts(text))
 
 
 st.title("F1 Commentary Generator")
