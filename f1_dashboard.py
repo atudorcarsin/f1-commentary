@@ -107,7 +107,7 @@ def speak_text(text):
 # -------------------------------------
 st.title(" F1 Commentary Generator")
 
-df = pd.read_csv("output_sample.csv")
+df = pd.read_csv("output.csv")
 df = df.sort_values(by='lap_number')
 driver_column = 'driver_full_name'
 
