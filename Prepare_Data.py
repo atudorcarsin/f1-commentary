@@ -1,29 +1,81 @@
 import pandas as pd
 import numpy as np
 
-# Load the data
-meetings_df = pd.read_csv('openf1_meetings.csv')
-drivers_df = pd.read_csv('openf1_drivers.csv')
-pit_df = pd.read_csv('openf1_pit.csv')
-race_control_df = pd.read_csv('openf1_race_control.csv')
-session_df = pd.read_csv('openf1_session.csv')
-stints_df = pd.read_csv('openf1_stints.csv')
-# team_radio_df = pd.read_csv('openf1_team_radio.csv')
-weather_df = pd.read_csv('openf1_weather.csv')
-laps_df = pd.read_csv('openf1_laps.csv')
-position_df = pd.read_csv('openf1_position.csv')
-car_data_df = pd.read_csv('openf1_car_data.csv')
-# intervals_df=pd.read_csv('openf1_intervals.csv')
+combined_by_type = {}
 
-"""session_key = 9165
-meeting_key = 1219
-"""
+def fetch_with_retry(url, max_retries=4, wait_seconds=3):
+    for attempt in range(max_retries + 1):
+        try:
+            response = re.get(url)
+            if response.status_code == 500:
+                print(f"500 error on {url} (attempt {attempt + 1})")
+                if attempt < max_retries:
+                    time.sleep(wait_seconds)
+                    continue
+                else:
+                    raise Exception("Max retries reached for 500 error")
+            response.raise_for_status()
+            return response
+        except Exception as e:
+            if attempt < max_retries:
+                print(f"Retrying {url} due to error: {e}")
+                time.sleep(wait_seconds)
+            else:
+                raise
 
-meetings_df = meetings_df[meetings_df['meeting_key']==1219]
-# meetings_df
+drivers_no = [2, 4, 1, 24, 10, 14, 16, 20, 22, 23, 27, 31, 40, 44, 55, 63, 81, 11, 77]
+df_dict = {}
 
-session_df = session_df[((session_df['meeting_key']==1219) & (session_df['session_key']==9165))]
-# session_df
+url_meeting = 'https://api.openf1.org/v1/meetings?year=2023&country_name=Singapore'
+response = fetch_with_retry(url_meeting)
+meetings_df = pd.DataFrame(response.json())
+
+
+url_session = 'https://api.openf1.org/v1/sessions?meeting_key=1219&session_key=9165&year=2023'
+response = fetch_with_retry(url_session)
+session_df = pd.DataFrame(response.json())
+
+
+url_weather = 'https://api.openf1.org/v1/weather?meeting_key=1219&session_key=9165'
+response = fetch_with_retry(url_weather)
+weather_df = pd.DataFrame(response.json())
+
+url_cardata = 'https://api.openf1.org/v1/car_data?meeting_key=1219&session_key=9165&drs>=9'
+response = fetch_with_retry(url_cardata)
+car_data_df = pd.DataFrame(response.json())
+
+for driver in drivers_no:
+    df_dict[driver] = {}
+
+    api_dict = {
+        'drivers': f'https://api.openf1.org/v1/drivers?meeting_key=1219&driver_number={driver}&session_key=9165',
+        'pit': f'https://api.openf1.org/v1/pit?session_key=9165&driver_number={driver}',
+        'position': f'https://api.openf1.org/v1/position?meeting_key=1219&driver_number={driver}&session_key=9165',
+        'race_control': f'https://api.openf1.org/v1/race_control?meeting_key=1219&session_key=9165&driver_number={driver}',
+        'laps': f'https://api.openf1.org/v1/laps?session_key=9165&driver_number={driver}&meeting_key=1219',
+        'stints': f'https://api.openf1.org/v1/stints?session_key=9165&driver_number={driver}&meeting_key=1219'
+    }
+
+    for key, url in api_dict.items():
+        try:
+            response = fetch_with_retry(url)
+            df = pd.DataFrame(response.json())
+            df_dict[driver][key] = df
+            if not df.empty:
+                if key in combined_by_type:
+                    combined_by_type[key] = pd.concat([combined_by_type[key], df], ignore_index=True)
+                else:
+                    combined_by_type[key] = df
+            print(f"{key} loaded with {len(df)} rows for driver {driver}")
+        except Exception as e:
+            print(f"Failed to load {key} for driver {driver}: {e}")
+
+drivers_df = combined_by_type.get('drivers', pd.DataFrame())
+pit_df = combined_by_type.get('pit', pd.DataFrame())
+position_df = combined_by_type.get('position', pd.DataFrame())
+race_control_df = combined_by_type.get('race_control', pd.DataFrame())
+laps_df = combined_by_type.get('laps', pd.DataFrame())
+
 
 race_df = meetings_df.merge(session_df, how='inner', on =['meeting_key'])
 race_df = race_df[['meeting_key','session_key', 'meeting_official_name', 'location_x', 'country_name_x','circuit_short_name_x', 'session_name','date_start_x', 'date_end', 'year_x']]
