@@ -17,7 +17,7 @@ engine.setProperty('voice', engine.getProperty('voices')[82].id)
 #     engine = pyttsx3.init()
 #     engine.setProperty('rate', 180)
 #     engine.setProperty('voice', engine.getProperty('voices')[82].id)
-#     engine.say(text)
+#     engxine.say(text)
 #     engine.runAndWait()
 
 
