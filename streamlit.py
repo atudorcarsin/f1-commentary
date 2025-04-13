@@ -1,20 +1,36 @@
 import streamlit as st
 import pandas as pd
 import pyttsx3
+from gtts import gTTS
+import tempfile
+import streamlit as st
 
 # Initialize TTS engine
 engine = pyttsx3.init()
 engine.setProperty('rate', 180)
 engine.setProperty('voice', engine.getProperty('voices')[82].id)
 
+# def speak_text(text):
+#     engine = pyttsx3.init()
+#     engine.setProperty('rate', 180)
+#     engine.setProperty('voice', engine.getProperty('voices')[82].id)
+#     engine.say(text)
+#     engine.runAndWait()
+
+
+
 def speak_text(text):
-    engine.say(text)
-    engine.runAndWait()
+    tts = gTTS(text)
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp:
+        tts.save(tmp.name)
+        st.audio(tmp.name, format="audio/mp3")  # Streamlit audio widget
+
+
 
 st.title("F1 Commentary Generator")
 
 # Load and sort the DataFrame
-df = pd.read_csv("output.csv")
+df = pd.read_csv("output_sample.csv")
 df = df.sort_values(by='lap_number')
 
 # Debug: Display column names in sidebar
@@ -73,7 +89,7 @@ if driver_column in df.columns:
                 with st.expander(f"{driver}"):
                     ai_comment = driver_row.iloc[0]['ai_comment']
                     st.write(ai_comment)
-                    if st.button(f"🔊 Play", key=f"play_{driver}_{current_lap}"):
+                    if st.button(f"🔊 Audio", key=f"play_{driver}_{current_lap}"):
                         speak_text(ai_comment)
     else:
         # Show only selected driver's commentary
