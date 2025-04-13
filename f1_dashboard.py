@@ -109,7 +109,7 @@ st.title(" F1 Commentary Generator")
 
 df = pd.read_csv("output.csv")
 df = df.sort_values(by='lap_number')
-driver_column = 'driver_full_name'
+driver_column = 'full_name'
 
 # Sidebar column list
 st.sidebar.markdown("### 📄 Available Data Columns")
