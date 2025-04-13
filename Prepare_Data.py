@@ -1,5 +1,7 @@
 import pandas as pd
 import numpy as np
+import requests as re
+import time
 
 combined_by_type = {}
 
@@ -112,6 +114,14 @@ for i in range(1, len(laps_df)):  # Start from 1 to avoid index -1 on first row
 
 race_laps_df = laps_df.merge(race_df, how='left', on=['meeting_key', 'session_key', 'driver_number'])
 # race_laps_df
+race_laps_df.loc[race_laps_df['lap_number'] == 1, 'lap_start_time'] = race_laps_df.loc[race_laps_df['lap_number'] == 1, 'date_start_x']
+mask = race_laps_df['lap_number'] == 1
+
+race_laps_df.loc[mask, 'lap_end_time'] = (
+    race_laps_df.loc[mask, 'lap_start_time'] +
+    pd.to_timedelta(race_laps_df.loc[mask, 'duration_sector_2'], unit='s') +
+    pd.to_timedelta(race_laps_df.loc[mask, 'duration_sector_3'], unit='s')
+)
 
 pit_df = pit_df[((pit_df['meeting_key']==1219)&(pit_df['session_key']==9165))]
 pit_df = pit_df.rename(columns={'date':'pit_date'})
@@ -334,7 +344,7 @@ race_master_df['interval_lap_end'] = race_master_df.groupby('lap_number')['lap_s
 # race_master_df[['lap_number', 'driver_number', 'lap_start_time', 'lap_end_time',
 #                 'interval_lap_start', 'interval_lap_end', 'gap_to_leader']].head(20)
 
-race_master_df.rename(columns={'full_name':'driver_full_name'})
+race_master_df.rename(columns={'full_name':'driver_full_name'},inplace=True)
 
 race_master_df.to_csv('ads.csv')
 
